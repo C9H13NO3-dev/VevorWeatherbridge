@@ -9,3 +9,6 @@ services:
       TZ: Europe/Berlin
       HA_URL: http://xx.xx.xx.xx:8123/api/states/      # <-- SET YOUR HA URL
       HA_TOKEN: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx # <-- SET YOUR TOKEN
+      WU_RELAY: "false"                               # Relay to Weather Underground
+      WU_ID: ""                                       # Optional WU station ID
+      WU_PASSWORD: ""                                 # Optional WU station key

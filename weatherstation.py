@@ -3,11 +3,15 @@ import requests
 from datetime import datetime
 import pytz
 import os
+import dns.resolver
 
 # Set these!
 HOME_ASSISTANT_URL_BASE = os.environ.get("HA_URL", "http://xx.xx.xx.xx:8123/api/states/")
 ACCESS_TOKEN = os.environ.get("HA_TOKEN", "YOUR_LONG_LIVED_ACCESS_TOKEN")
 TIMEZONE = os.environ.get("TZ", "Europe/Berlin")
+WU_RELAY = os.environ.get("WU_RELAY", "false").lower() == "true"
+WU_ID = os.environ.get("WU_ID")
+WU_PASSWORD = os.environ.get("WU_PASSWORD")
 
 app = Flask(__name__)
 
@@ -17,6 +21,33 @@ def mph_to_kmh(mph): return round(float(mph) * 1.60934, 1)
 def inch_to_mm(inch): return round(float(inch) * 25.4, 1)
 
 def safe_get(key): return request.args.get(key, None)
+
+def resolve_google_dns(domain):
+    try:
+        resolver = dns.resolver.Resolver()
+        resolver.nameservers = ["8.8.8.8", "8.8.4.4"]
+        answer = resolver.resolve(domain, "A")
+        return answer[0].to_text()
+    except Exception as e:
+        print(f"DNS resolution failed for {domain}: {e}")
+        return None
+
+def relay_to_weather_underground(params):
+    domain = "rtupdate.wunderground.com"
+    ip = resolve_google_dns(domain)
+    if not ip:
+        return
+    url = f"https://{ip}/weatherstation/updateweatherstation.php"
+    headers = {"Host": domain}
+    if WU_ID:
+        params["ID"] = WU_ID
+    if WU_PASSWORD:
+        params["PASSWORD"] = WU_PASSWORD
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=5)
+        resp.raise_for_status()
+    except Exception as e:
+        print(f"Error relaying to Weather Underground: {e}")
 
 @app.route('/weatherstation/updateweatherstation.php')
 def update():
@@ -110,6 +141,9 @@ def update():
             resp.raise_for_status()
         except Exception as e:
             print(f"Error updating {sensor_name}: {e}")
+
+    if WU_RELAY:
+        relay_to_weather_underground(request.args.to_dict())
 
     return "success", 200
 

@@ -13,6 +13,7 @@ No PHP or web server needed&mdash;just Python and Flask!
 - Pushes sensor data to Home Assistant as custom sensors via its REST API
 - Dockerized for simple deployment anywhere
 - Responds with `success` so the weather station doesn’t retry
+- Optional relay of data to Weather Underground using Google DNS
 
 ---
 
@@ -31,6 +32,9 @@ Edit the `docker-compose.yml` file and set the following variables:
 
 - `HA_URL`: Base URL to your Home Assistant API (e.g., `http://192.168.1.100:8123/api/states/`)
 - `HA_TOKEN`: Your Home Assistant long-lived access token
+- `WU_RELAY`: Set to `true` to also forward data to Weather Underground
+- `WU_ID`: (Optional) Weather Underground station ID used when relaying
+- `WU_PASSWORD`: (Optional) Weather Underground password/key for relaying
 
 Example:
 
@@ -39,6 +43,9 @@ environment:
   TZ: Europe/Berlin
   HA_URL: http://192.168.1.100:8123/api/states/
   HA_TOKEN: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  WU_RELAY: "true"
+  WU_ID: YOUR_WU_ID
+  WU_PASSWORD: YOUR_WU_PASSWORD
 ```
 
 ### 3. Build and run
